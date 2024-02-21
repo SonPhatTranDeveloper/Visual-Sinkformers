@@ -29,3 +29,7 @@ demonstrated in the original Sinkformers paper.
 - [ ] A code repository containing the modified (with Sinkformers) DINOv2 models.
 - [ ] Fine-tuned DINOv2 models on the ImageNet-1k dataset, with calculated top-1
 accuracy results and relevant result interpretation.
+
+## Resources
+Resources used to implement the project
+- [Multi-head attention from scratch](https://towardsdatascience.com/transformers-explained-visually-part-3-multi-head-attention-deep-dive-1c1ff1024853)
