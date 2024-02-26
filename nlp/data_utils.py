@@ -62,6 +62,3 @@ if __name__ == "__main__":
         imdb,
         tokenizer
     )
-
-    # Get the input_ids and label of the first training examples
-    input_ids, label = dataset[0]

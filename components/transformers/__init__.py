@@ -12,7 +12,7 @@ class ScaledProductAttention(nn.Module):
         """
         Initialize the scaled product attention block with query size of d_q
         """
-        super(ScaledProductAttention).__init__()
+        super(ScaledProductAttention, self).__init__()
         self.d_q = d_q
 
     def forward(self, q, k, v, attention_mask):
@@ -51,7 +51,7 @@ class MultiHeadAttention(nn.Module):
         :param d_model: the number of features in the input
         :param n_heads: the number of heads of the multi-head attention block
         """
-        super(MultiHeadAttention).__init__()
+        super(MultiHeadAttention, self).__init__()
 
         # Cache the model size and number of heads
         self.d_model = d_model
@@ -121,7 +121,7 @@ class FeedForwardNetwork(nn.Module):
         :param d_model: the expected number of features of the input
         :param d_hidden: the hidden layer size of the feed forward network
         """
-        super(FeedForwardNetwork).__init__()
+        super(FeedForwardNetwork, self).__init__()
 
         # Save the model size and hidden size
         self.d_model = d_model
@@ -129,7 +129,7 @@ class FeedForwardNetwork(nn.Module):
 
         # Create two linear layers for the feed forward network
         self.linear_1 = nn.Linear(self.d_model, self.d_hidden)
-        self.linear_2 = nn.Linear(self.d_hidden, self.d_hidden)
+        self.linear_2 = nn.Linear(self.d_hidden, self.d_model)
 
         # Create a ReLU layer
         self.relu = nn.ReLU()
@@ -153,7 +153,7 @@ class FeedForwardNetwork(nn.Module):
 
 
 class SingleEncoderLayer(nn.Module):
-    def __init__(self, d_model, n_heads, p_dropout, d_hidden):
+    def __init__(self, d_model, n_heads, p_dropout, d_hidden, attention_class):
         """
         Initialize the encoder block of the Transformers
         :param d_model: the expected number of features of the input (embeddings)
@@ -161,7 +161,7 @@ class SingleEncoderLayer(nn.Module):
         :param p_dropout: the dropout probability
         :param d_hidden: the size of the hidden unit in the feed forward network
         """
-        super(SingleEncoderLayer).__init__()
+        super(SingleEncoderLayer, self).__init__()
 
         # Cache the dimensions
         self.d_model = d_model
@@ -172,7 +172,8 @@ class SingleEncoderLayer(nn.Module):
         # Create the Multi-head attention layer
         self.multi_head_attention = MultiHeadAttention(
             d_model=d_model,
-            n_heads=n_heads
+            n_heads=n_heads,
+            attention_class=attention_class
         )
 
         # Create the first dropout layer after the multi-headed attention

@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from components.transformers import SingleEncoderLayer
+from components.transformers import ScaledProductAttention
 
 
 def generate_sinusoid_table(seq_len, d_model):
@@ -34,7 +35,8 @@ class NLPTransformerEncoder(nn.Module):
                  d_model=512,
                  n_heads=8,
                  p_dropout=0.1,
-                 d_hidden=2048):
+                 d_hidden=2048,
+                 mode="softmax"):
         """
         Define the Transformer Encoder layer (contains N encoders) specifically designed for NLP sentiment prediction
         task
@@ -47,7 +49,7 @@ class NLPTransformerEncoder(nn.Module):
         :param d_hidden: hidden size of the feed-forward network in the encoder
         :param pad_id: padding id
         """
-        super(NLPTransformerEncoder).__init__()
+        super(NLPTransformerEncoder, self).__init__()
 
         # Cache the variables
         self.vocab_size = vocab_size
@@ -82,7 +84,8 @@ class NLPTransformerEncoder(nn.Module):
                     d_model=self.d_model,
                     n_heads=self.n_heads,
                     p_dropout=self.p_dropout,
-                    d_hidden=self.d_hidden
+                    d_hidden=self.d_hidden,
+                    attention_class=ScaledProductAttention if mode == "softmax" else None,
                 )
                 for _ in range(self.n_layers)
             ]
@@ -103,7 +106,7 @@ class NLPTransformerEncoder(nn.Module):
         # Generate the positional encoding of the input sequences
         # positions has size (batch_size, sequence_length)
         batch_size, sequence_length = inputs.size(0), inputs.size(1)
-        positions = (torch.arange(sequence_length, device=inputs.device, dtype=inputs.dtype).repeat(sequence_length, 1)
+        positions = (torch.arange(sequence_length, device=inputs.device, dtype=inputs.dtype).repeat(batch_size, 1)
                      + 1)
 
         # Fill the padding position with 0
