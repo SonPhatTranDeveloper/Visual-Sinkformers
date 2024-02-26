@@ -30,7 +30,7 @@ class SentimentAnalysisTrainer:
         self.pad_id = tokenizer.pad_token_id
 
         # Initialize device
-        self.device = "cuda" if torch.cuda.is_available() and args.no_cuda else "mps"
+        self.device = "cuda" if torch.cuda.is_available() else "mps"
 
         # Create NLP transformer encoder
         # based on the mode

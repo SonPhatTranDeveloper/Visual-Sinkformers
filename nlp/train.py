@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # Train parameters
     parser.add_argument('--epochs', default=15, type=int, help='the number of epochs')
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
-    parser.add_argument('--no_cuda', action='store_true')
+    parser.add_argument('--no_cuda', default=False, action='store_true')
 
     # Model parameters
     parser.add_argument('--hidden', default=256, type=int, help='the number of expected features in the transformer')
