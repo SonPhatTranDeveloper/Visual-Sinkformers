@@ -33,3 +33,5 @@ accuracy results and relevant result interpretation.
 ## Resources
 Resources used to implement the project
 - [Multi-head attention from scratch](https://towardsdatascience.com/transformers-explained-visually-part-3-multi-head-attention-deep-dive-1c1ff1024853)
+- [Model training on AWS](https://github.com/ultralytics/yolov5/wiki/AWS-Quickstart)
+- [Push from AWS to Github](https://www.reddit.com/r/aws/comments/13zb1gm/how_to_push_to_remote_github_repository_from_aws/)
