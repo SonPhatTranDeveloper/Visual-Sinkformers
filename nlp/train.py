@@ -14,9 +14,9 @@ import argparse
 import numpy as np
 
 from tokenizer import Tokenizer
-from my_train_datasets import IMDBDataset
 from data_utils import create_dataset
 from trainer import SentimentAnalysisTrainer
+from my_train_datasets import IMDBDataset
 
 
 def train(arguments):
