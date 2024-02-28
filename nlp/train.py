@@ -34,11 +34,11 @@ def train(arguments):
     # Create the tokenizer
     tokenizer = Tokenizer(
         tokenizer=MosesTokenizer(),
-        vocab_file_path="imdb.vocab"
+        vocab_file_path="nlp/imdb.vocab"
     )
 
     # Create data loader
-    imdb = IMDBDataset("../data/imdb_dataset.csv")
+    imdb = IMDBDataset("data/imdb_dataset.csv")
     dataset = create_dataset(
         sentiment_analysis_dataset=imdb,
         tokenizer=tokenizer
