@@ -31,5 +31,3 @@ class IMDBDataset:
         item = self.texts[self.num], self.labels[self.num]
         self.num += 1
         return item
-
-

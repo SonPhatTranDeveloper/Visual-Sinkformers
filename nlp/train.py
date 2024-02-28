@@ -16,7 +16,7 @@ import numpy as np
 from tokenizer import Tokenizer
 from data_utils import create_dataset
 from trainer import SentimentAnalysisTrainer
-from my_train_datasets import IMDBDataset
+from imdb_dataset import IMDBDataset
 
 
 def train(arguments):
