@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import TensorDataset
 
 from mosestokenizer import MosesTokenizer
-from my_train_datasets import IMDBDataset
+from imdb_dataset import IMDBDataset
 from tokenizer import Tokenizer
 
 
