@@ -35,3 +35,6 @@ Resources used to implement the project
 - [Multi-head attention from scratch](https://towardsdatascience.com/transformers-explained-visually-part-3-multi-head-attention-deep-dive-1c1ff1024853)
 - [Model training on AWS](https://github.com/ultralytics/yolov5/wiki/AWS-Quickstart)
 - [Push from AWS to Github](https://www.reddit.com/r/aws/comments/13zb1gm/how_to_push_to_remote_github_repository_from_aws/)
+- [Sinkhorn-Knopp algorithm](https://fulkast.medium.com/the-sinkhorn-knopp-algorithm-without-proof-697c9af7df7)
+- [Sinkhorn AutoDiff](https://arxiv.org/pdf/1706.00292.pdf)
+- [Sinkhorn AutoDiff Algorithm](https://arxiv.org/pdf/1607.05816.pdf)
