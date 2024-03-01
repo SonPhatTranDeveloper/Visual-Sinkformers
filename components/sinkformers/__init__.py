@@ -3,6 +3,7 @@ This file contains the implementation of the Sinkhorn component of Transformers
 """
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 class SinkhornDistanceFast(nn.Module):
