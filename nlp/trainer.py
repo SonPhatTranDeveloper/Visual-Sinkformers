@@ -88,7 +88,7 @@ class SentimentAnalysisTrainer:
 
         # Cache the attention weights
         for i, batch in enumerate(self.train_dataloader):
-            print(f"Batch {i}")
+            # print(f"Batch {i}")
 
             # Map to device
             # inputs have size (batch_size, max_sequence_length)
