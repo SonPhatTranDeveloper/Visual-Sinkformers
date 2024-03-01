@@ -30,23 +30,22 @@ class SentimentAnalysisTrainer:
         self.pad_id = tokenizer.pad_token_id
 
         # Initialize device
-        self.device = "cuda" if torch.cuda.is_available() else "mps"
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # Create NLP transformer encoder
         # based on the mode
-        model = None
-        if mode == "softmax":
-            model = NLPTransformerEncoder(
-                vocab_size=self.vocab_size,
-                sequence_length=args.max_sequence_length,
-                pad_id=self.pad_id,
-                n_layers=args.n_layers,
-                d_model=args.hidden,
-                n_heads=args.n_attn_heads,
-                p_dropout=args.dropout,
-                d_hidden=args.ffn_hidden,
-                mode=mode
-            )
+        model = NLPTransformerEncoder(
+            vocab_size=self.vocab_size,
+            sequence_length=args.max_sequence_length,
+            pad_id=self.pad_id,
+            n_layers=args.n_layers,
+            d_model=args.hidden,
+            n_heads=args.n_attn_heads,
+            p_dropout=args.dropout,
+            d_hidden=args.ffn_hidden,
+            mode=mode,
+            n_iter=n_iter
+        )
 
         # Reset the parameters
         for layer in model.children():
@@ -89,6 +88,8 @@ class SentimentAnalysisTrainer:
 
         # Cache the attention weights
         for i, batch in enumerate(self.train_dataloader):
+            print(f"Batch {i}")
+
             # Map to device
             # inputs have size (batch_size, max_sequence_length)
             # labels have size (batch_size, )

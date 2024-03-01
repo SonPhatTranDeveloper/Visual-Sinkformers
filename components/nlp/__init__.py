@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from components.transformers import SingleEncoderLayer
 from components.transformers import ScaledProductAttentionSoftmax
+from components.sinkformers import ScaledProductAttentionSinkhorn
 
 
 def generate_sinusoid_table(seq_len, d_model):
@@ -12,6 +13,7 @@ def generate_sinusoid_table(seq_len, d_model):
     :param d_model: the expected number of features of the input
     :return: the positional encoding table
     """
+
     def get_angle(pos, i, d_model):
         return pos / np.power(10000, (2 * (i // 2)) / d_model)
 
@@ -36,6 +38,7 @@ class NLPTransformerEncoder(nn.Module):
                  n_heads=8,
                  p_dropout=0.1,
                  d_hidden=2048,
+                 n_iter=3,
                  mode="softmax"):
         """
         Define the Transformer Encoder layer (contains N encoders) specifically designed for NLP sentiment prediction
@@ -85,7 +88,8 @@ class NLPTransformerEncoder(nn.Module):
                     n_heads=self.n_heads,
                     p_dropout=self.p_dropout,
                     d_hidden=self.d_hidden,
-                    attention_class=ScaledProductAttentionSoftmax if mode == "softmax" else None,
+                    attention_class=ScaledProductAttentionSoftmax if mode == "softmax" else ScaledProductAttentionSinkhorn,
+                    attention_params={} if mode == "softmax" else {'n_iter': n_iter, 'eps': 1}
                 )
                 for _ in range(self.n_layers)
             ]
@@ -147,6 +151,3 @@ class NLPTransformerEncoder(nn.Module):
 
         # Return the outputs and attention weights
         return outputs, attention_weights
-
-
-

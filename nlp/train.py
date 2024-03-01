@@ -27,7 +27,7 @@ def train(arguments):
     """
     # Save address of the losses
     stats_save_dir = arguments.save_dir
-    n_it = arguments.n_it
+    n_it = arguments.n_iter
     seed = arguments.seed
     stats_save_address = stats_save_dir + '/%d_it_%d.npy' % (n_it, seed)
 
@@ -61,7 +61,7 @@ def train(arguments):
         train_dataloader=train_loader,
         test_dataloader=test_loader,
         tokenizer=tokenizer,
-        n_iter=arguments.n_it,
+        n_iter=arguments.n_iter,
         mode=arguments.mode
     )
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     parser.add_argument('--max_sequence_length', default=512, type=int, help='the maximum size of the input sequence')
 
     # Softmax or sinkhorn
-    parser.add_argument("--mode", default="softmax", help="use softmax or sinkhorn normalization")
+    parser.add_argument("--mode", default="sinkhorn", help="use softmax or sinkhorn normalization")
 
     # Train parameters
     parser.add_argument('--epochs', default=15, type=int, help='the number of epochs')
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument('--dropout', default=0.1, type=float, help='the residual dropout value')
     parser.add_argument('--ffn_hidden', default=1024, type=int, help='the dimension of the feedforward network')
     parser.add_argument('--save_dir', default='results', type=str, help='save dir')
-    parser.add_argument("--n_it", type=int, default=3)
+    parser.add_argument("--n_iter", type=int, default=3)
     parser.add_argument("--seed", type=int, default=0)
 
     # Parse the argument

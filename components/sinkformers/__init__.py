@@ -7,7 +7,7 @@ import numpy as np
 
 
 class SinkhornDistanceFast(nn.Module):
-    def __init__(self, eps, max_iter):
+    def __init__(self, eps=1, max_iter=1):
         """
         Initialize the Sinkhorn Fast and Stable AutoDiff algorithm
         Adapted from the paper: https://arxiv.org/pdf/1607.05816.pdf
@@ -81,13 +81,14 @@ class SinkhornDistanceFast(nn.Module):
 
 
 class ScaledProductAttentionSinkhorn(nn.Module):
-    def __init__(self, d_q, n_iter):
+    def __init__(self, d_q, eps, n_iter):
         """
         Initialize the scaled product attention block WITH SINKHORN with query size of d_q
         and n_iter of Sinkhorn iteration
         """
         super(ScaledProductAttentionSinkhorn, self).__init__()
         self.d_q = d_q
+        self.eps = eps
         self.n_iter = n_iter
 
     def forward(self, q, k, v, attention_mask):
@@ -114,7 +115,7 @@ class ScaledProductAttentionSinkhorn(nn.Module):
         attention_score = attention_score.view(-1, attention_score_shape[2], attention_score_shape[3])
 
         # Perform Sinkhorn iteration to calculate attention weights
-        sinkhorn = SinkhornDistanceFast(eps=1, max_iter=self.n_iter)
+        sinkhorn = SinkhornDistanceFast(eps=self.eps, max_iter=self.n_iter)
         attention_weights = sinkhorn(attention_score)
         attention_weights = attention_weights * attention_weights.shape[-1]
         attention_weights = attention_weights.view(attention_score_shape)

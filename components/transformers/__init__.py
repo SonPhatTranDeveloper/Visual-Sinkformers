@@ -45,7 +45,7 @@ class ScaledProductAttentionSoftmax(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, d_model, n_heads, attention_class):
+    def __init__(self, d_model, n_heads, attention_class, attention_params):
         """
         Initialize the multi-head attention block
         :param d_model: the number of features in the input
@@ -66,7 +66,11 @@ class MultiHeadAttention(nn.Module):
         self.v_transform = nn.Linear(d_model, d_model)
 
         # Define the scaled product attention layer
-        self.scaled_product_attention = attention_class(self.d_k)
+        attention_params = {
+            'd_q': self.d_k,
+            **attention_params
+        }
+        self.scaled_product_attention = attention_class(**attention_params)
 
         # Define the linear transformation from the attention heads (n_heads * d_v) to d_model
         self.linear = nn.Linear(n_heads * self.d_v, d_model)
@@ -153,7 +157,7 @@ class FeedForwardNetwork(nn.Module):
 
 
 class SingleEncoderLayer(nn.Module):
-    def __init__(self, d_model, n_heads, p_dropout, d_hidden, attention_class):
+    def __init__(self, d_model, n_heads, p_dropout, d_hidden, attention_class, attention_params):
         """
         Initialize the encoder block of the Transformers
         :param d_model: the expected number of features of the input (embeddings)
@@ -173,7 +177,8 @@ class SingleEncoderLayer(nn.Module):
         self.multi_head_attention = MultiHeadAttention(
             d_model=d_model,
             n_heads=n_heads,
-            attention_class=attention_class
+            attention_class=attention_class,
+            attention_params=attention_params
         )
 
         # Create the first dropout layer after the multi-headed attention
