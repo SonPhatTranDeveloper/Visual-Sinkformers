@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from components.transformers import SingleEncoderLayer
-from components.transformers import ScaledProductAttention
+from components.transformers import ScaledProductAttentionSoftmax
 
 
 def generate_sinusoid_table(seq_len, d_model):
@@ -85,7 +85,7 @@ class NLPTransformerEncoder(nn.Module):
                     n_heads=self.n_heads,
                     p_dropout=self.p_dropout,
                     d_hidden=self.d_hidden,
-                    attention_class=ScaledProductAttention if mode == "softmax" else None,
+                    attention_class=ScaledProductAttentionSoftmax if mode == "softmax" else None,
                 )
                 for _ in range(self.n_layers)
             ]

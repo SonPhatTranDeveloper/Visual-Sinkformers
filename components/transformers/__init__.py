@@ -7,12 +7,12 @@ import torch
 import torch.nn as nn
 
 
-class ScaledProductAttention(nn.Module):
+class ScaledProductAttentionSoftmax(nn.Module):
     def __init__(self, d_q):
         """
         Initialize the scaled product attention block with query size of d_q
         """
-        super(ScaledProductAttention, self).__init__()
+        super(ScaledProductAttentionSoftmax, self).__init__()
         self.d_q = d_q
 
     def forward(self, q, k, v, attention_mask):
