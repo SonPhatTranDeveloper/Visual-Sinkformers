@@ -19,7 +19,7 @@ This project builds upon recent advancements in Visual Transformers [1] for imag
 **Note**: These estimated milestones can change depending on the complexity of the task at hand
 
 ### Semester 1, 2024
-**Week 1 to 4**: Understanding and implementing Sinkformers architecture.
+**Week 1 to 6**: Understanding and implementing Sinkformers architecture.
 #### Deliverables
 - [ ] A Jupyter Notebook with ViT and Sinkformers implementation. 
 - [ ] Achieve 79-80% accuracy on the Cats and Dogs image classification dataset, as
