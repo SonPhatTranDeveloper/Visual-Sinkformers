@@ -279,7 +279,7 @@ class VisualTransformerClassification(nn.Module):
         self.cls_token = nn.Parameter(torch.rand(1, 1, d_model))
 
         # Drop-out layer for embedding
-        self.drop_out = nn.Dropout(p=p_emb_dropout)
+        self.embed_drop_out = nn.Dropout(p=p_emb_dropout)
 
         # Transformer layer
         self.transformer_encoder = None
@@ -326,7 +326,7 @@ class VisualTransformerClassification(nn.Module):
 
         # Go through embedding drop out layer
         # patches has shape (batch_size, number_of_patches + 1, d_model)
-        patches = self.drop_out(patches)
+        patches = self.embed_drop_out(patches)
 
         # Go the Transformer layer
         # outputs has size (batch_size, number_of_patches + 1, d_model)
