@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from einops import rearrange
+from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
 
@@ -166,7 +166,7 @@ class TransformerEncoder(nn.Module):
 
         for _ in range(n_layers):
             self.layers.append(nn.ModuleList([
-                PreNormalizationNetwork(d_model=d_model, func=ScaledProductAttentionSoftmax(**params)),
+                PreNormalizationNetwork(d_model=d_model, func=attention_func(**params)),
                 PreNormalizationNetwork(d_model=d_model, func=FeedForwardNetwork(
                     d_input=d_model,
                     d_hidden=d_ff,
@@ -204,3 +204,144 @@ class TransformerEncoder(nn.Module):
         # attention_weights is a list containing numpy arrays of
         # size (batch_size, number_of_heads, number_of_patches, number_of_patches)
         return inputs, weights
+
+
+class VisualTransformerClassification(nn.Module):
+    def __init__(self,
+                 image_width, image_height,
+                 patch_width, patch_height,
+                 n_classes,
+                 d_model,
+                 n_layers,
+                 n_heads,
+                 d_ff,
+                 pooling='cls',
+                 n_channels=3,
+                 d_head=64,
+                 p_dropout=0.0,
+                 p_emb_dropout=0.0,
+                 attention_class='softmax'):
+        """
+        Initialize the Visual Transformer for classification model
+        :param image_width: the width of input image
+        :param image_height: the height of input image
+        :param patch_width: the width of the patch
+        :param patch_height: the height of the patch
+        :param n_classes: number of class for classification task
+        :param d_model: the size of input features into the Transformer encoder block
+        :param n_layers: the number of layer of Transformer encoder block
+        :param n_heads: the number of attention head of Transformer encoder block
+        :param d_ff: the hidden size of MLP
+        :param pooling: pooling type
+        :param n_channels: the number of channels of the image
+        :param d_head: the number of heads of attention block in Transformer encoder
+        :param p_dropout: the dropout rate for the Transformer encoder block
+        :param p_emb_dropout: the dropout rate for the positional embedding layer
+        :param attention_class: class of the attention mechanism (Softmax or Sinkhorn)
+        """
+        # Check the configuration of size
+        assert image_width % patch_width == 0 and image_height % patch_height == 0, \
+            "Image dimensions should be divisible by the patch size"
+
+        # Check the type of pooling
+        assert pooling in ['cls', 'mean'], "Pooling must be either cls (classification token) or mean (mean pooling)"
+
+        # Check the type of attention class
+        assert attention_class in ['softmax', 'sinkhorn'], "Attention class must either be softmax or sinkhorn"
+
+        # Save the image configuration
+        self.image_width, self.image_height = image_width, image_height
+        self.patch_width, self.patch_height = patch_width, patch_height
+        self.n_channels = n_channels
+
+        # Save number of classes
+        self.n_classes = n_classes
+
+        # Save pooling type
+        self.pooling = pooling
+
+        # Calculate the number of patches
+        number_of_patches = (self.image_width // self.patch_width) * (self.image_height // self.patch_height)
+        patch_dims = self.n_channels * self.patch_height * self.patch_width
+
+        # Layer to convert image from patches to embeddings
+        # b is the batch size, c is the channels,
+        # (h p1) = number_of_patches * patch_height, (2, p2) = number of patches * patch_width
+        self.image_to_patch_embedding = nn.Sequential(
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=self.patch_height, p2=self.patch_width),
+            nn.Linear(in_features=patch_dims, out_features=d_model)
+        )
+
+        # Positional encoding layer
+        self.positional_embedding = nn.Parameter(torch.randn(1, number_of_patches + 1, d_model))
+
+        # Classification token layer
+        self.cls_token = nn.Parameter(torch.rand(1, 1, d_model))
+
+        # Drop-out layer for embedding
+        self.drop_out = nn.Dropout(p=p_emb_dropout)
+
+        # Transformer layer
+        self.transformer_encoder = None
+        if attention_class == "softmax":
+            self.transformer_encoder = TransformerEncoder(
+                d_model=d_model,
+                n_layers=n_layers,
+                n_heads=n_heads,
+                d_head=d_head,
+                d_ff=d_ff,
+                p_dropout=p_dropout,
+                attention_func=ScaledProductAttentionSoftmax,
+                attention_params={}
+            )
+
+        # Map-to-output layers
+        self.feed_forward = nn.Sequential(
+            nn.LayerNorm(normalized_shape=d_model),
+            nn.Linear(in_features=d_model, out_features=n_classes)
+        )
+
+    def forward(self, images):
+        """
+        Forward operation of the Visual Transformer for classification
+        :param images: tensor of size (batch_size, channels, height, width)
+        :return: outputs
+        """
+        # Map to patches
+        # patches has shape (batch_size, number of patches, d_model)
+        patches = self.image_to_patch_embedding(images)
+
+        # Get the batch size and number of patches
+        batch_size, number_of_batches, _ = patches.shape
+
+        # Concatenate the classification token into the patches
+        # cls_tokens has shape (batch_size, 1, d_model)
+        # patches has shape (batch_size, number_of_patches + 1, d_model)
+        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=batch_size)
+        patches = torch.cat([cls_tokens, patches], dim=1)
+
+        # Add the positional embedding
+        # patches has shape (batch_size, number_of_patches + 1, d_model)
+        patches = patches + self.positional_embedding[:, :(number_of_batches + 1)]
+
+        # Go through embedding drop out layer
+        # patches has shape (batch_size, number_of_patches + 1, d_model)
+        patches = self.drop_out(patches)
+
+        # Go the Transformer layer
+        # outputs has size (batch_size, number_of_patches + 1, d_model)
+        # attention_weights is a list containing n_layers tensor of shape
+        # (batch_size, n_heads, number_of_patches, number_of_patches)
+        outputs, attention_weights = self.transformer_encoder(patches)
+
+        # Perform mean pooling or grap the classification token
+        if self.pooling == 'mean':
+            outputs = outputs.mean(dim=1)
+        else:
+            outputs = outputs[:, 0]
+
+        # Map to the classification head
+        # outputs has size (batch_size, n_classes)
+        outputs = self.feed_forward(outputs)
+        return outputs, attention_weights
+
