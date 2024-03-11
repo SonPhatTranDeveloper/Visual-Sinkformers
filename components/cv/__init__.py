@@ -125,6 +125,10 @@ class ScaledProductAttentionSoftmax(nn.Module):
         # Reshape outputs to (batch_size, number_of_batches, (n_heads x d_head) = d_model)
         outputs = rearrange(outputs, 'b h n d -> b n (h d)')
 
+        # Map to output
+        # outputs has shape (batch_size, number_of_batches, d_model)
+        outputs = self.map_to_output(outputs)
+
         # Return the outputs and attention_weights
         return outputs, attention_weights
 
@@ -220,7 +224,8 @@ class VisualTransformerClassification(nn.Module):
                  d_head=64,
                  p_dropout=0.0,
                  p_emb_dropout=0.0,
-                 attention_class='softmax'):
+                 attention_class='softmax',
+                 n_iter=1):
         """
         Initialize the Visual Transformer for classification model
         :param image_width: the width of input image
@@ -239,6 +244,9 @@ class VisualTransformerClassification(nn.Module):
         :param p_emb_dropout: the dropout rate for the positional embedding layer
         :param attention_class: class of the attention mechanism (Softmax or Sinkhorn)
         """
+        # Initialize Visual Transformer
+        super(VisualTransformerClassification, self).__init__()
+
         # Check the configuration of size
         assert image_width % patch_width == 0 and image_height % patch_height == 0, \
             "Image dimensions should be divisible by the patch size"
@@ -266,7 +274,7 @@ class VisualTransformerClassification(nn.Module):
 
         # Layer to convert image from patches to embeddings
         # b is the batch size, c is the channels,
-        # (h p1) = number_of_patches * patch_height, (2, p2) = number of patches * patch_width
+        # (h p1) = number_of_patches * patch_height, (w, p2) = number of patches * patch_width
         self.image_to_patch_embedding = nn.Sequential(
             Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=self.patch_height, p2=self.patch_width),
             nn.Linear(in_features=patch_dims, out_features=d_model)
