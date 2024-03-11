@@ -2,10 +2,11 @@
 This file defines the dataset for cats and dogs images
 """
 from torch.utils.data import Dataset
-from torchvision import datasets, transforms
+from torchvision import transforms
 from PIL import Image
 
 from data_utils import create_file_lists
+
 
 # Define the transformation for the images
 def create_image_transformation():
