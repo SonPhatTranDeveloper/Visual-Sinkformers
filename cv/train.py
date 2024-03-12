@@ -75,7 +75,7 @@ def train(arguments):
         epoch_val_loss, epoch_val_accuracy = trainer.validate(epoch)
 
         # Save the model
-        trainer.save(epoch, arguments.output_model_prefix)
+        trainer.save(arguments.output_model_prefix, epoch)
 
         # Save the training and validation accuracy
         val_accuracy_array.append(epoch_val_accuracy)
@@ -96,6 +96,9 @@ def train(arguments):
 if __name__ == "__main__":
     # Create argument parser
     parser = argparse.ArgumentParser()
+
+    # Output model prefix
+    parser.add_argument('--output_model_prefix', default='model.pth', type=str, help='output model name prefix')
 
     # Image width and height
     parser.add_argument('--image_width', default=224, type=int, help='image width')
