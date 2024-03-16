@@ -76,9 +76,12 @@ class CatsAndDogsTrainer:
             for g in self.optimizer.param_groups:
                 g['lr'] /= 10
 
+        # Get the number of batches and the number of samples of the test loader
+        n_batches, n_samples = len(self.train_dataloader), len(self.train_dataloader.dataset)
+
         # Initialize the loss and accuracy
-        epoch_loss = 0
-        epoch_accuracy = 0
+        epoch_loss = 0.0
+        epoch_accuracy = 0.0
 
         # Put the model into train mode
         self.model.train()
@@ -100,9 +103,13 @@ class CatsAndDogsTrainer:
             self.optimizer.step()
 
             # Calculate the loss and accuracy
-            acc = (output.argmax(dim=1) == label).float().mean()
-            epoch_accuracy += acc / len(self.train_dataloader)
-            epoch_loss += loss / len(self.train_dataloader)
+            acc = (output.argmax(dim=1) == label).float().sum()
+            epoch_accuracy += acc.item()
+            epoch_loss += loss.item()
+
+        # Calculate the loss and accuracy
+        epoch_loss = epoch_loss / n_batches
+        epoch_accuracy = epoch_accuracy / n_samples * 100
 
         # Calculate the training time
         print(time.time() - current_time)
@@ -118,13 +125,16 @@ class CatsAndDogsTrainer:
         :param epoch: the current epoch
         :return: the epoch loss and accuracy
         """
+        # Get the number of batches and the number of samples of the test loader
+        n_batches, n_samples = len(self.test_dataloader), len(self.test_dataloader.dataset)
+
         # Put the model into eval mode
         self.model.eval()
 
         # Validate
         with torch.no_grad():
-            epoch_val_accuracy = 0
-            epoch_val_loss = 0
+            epoch_val_accuracy = 0.0
+            epoch_val_loss = 0.0
 
             for data, label in self.test_dataloader:
                 # Map image and label to device
@@ -136,9 +146,13 @@ class CatsAndDogsTrainer:
                 val_loss = self.criterion(val_output, label)
 
                 # Get the loss and accuracy
-                acc = (val_output.argmax(dim=1) == label).float().mean()
-                epoch_val_accuracy += acc / len(self.test_dataloader)
-                epoch_val_loss += val_loss / len(self.test_dataloader)
+                acc = (val_output.argmax(dim=1) == label).float().sum()
+                epoch_val_accuracy += acc.item()
+                epoch_val_loss += val_loss.item()
+
+        # Calculate the validation accuracy and loss
+        epoch_val_loss = epoch_val_loss / n_batches
+        epoch_val_accuracy = epoch_val_accuracy / n_samples * 100
 
         # Display the current stats
         print('Validation Epoch: {}\t>\tLoss: {:.4f} / Acc: {:.1f}%'.format(epoch, epoch_val_loss,

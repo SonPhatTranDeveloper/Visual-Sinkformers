@@ -78,12 +78,12 @@ def train(arguments):
         trainer.save(arguments.output_model_prefix, epoch)
 
         # Save the training and validation accuracy
-        val_accuracy_array.append(epoch_val_accuracy.cpu().numpy())
-        train_accuracy_array.append(epoch_accuracy.cpu().numpy())
+        val_accuracy_array.append(epoch_val_accuracy)
+        train_accuracy_array.append(epoch_accuracy)
 
         # Save the validation and training loss
-        val_loss_array.append(epoch_val_loss.cpu().numpy())
-        train_loss_array.append(epoch_loss.cpu().numpy())
+        val_loss_array.append(epoch_val_loss)
+        train_loss_array.append(epoch_loss)
 
         # Save the training and validation result
         losses = np.asarray([train_loss_array, val_loss_array, train_accuracy_array, val_accuracy_array])
