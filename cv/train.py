@@ -1,8 +1,6 @@
 """
 This file defines the train script for the Visual Transformers model
 """
-import torch
-import torch.utils.data
 from torch.utils.data import DataLoader
 
 import numpy as np
