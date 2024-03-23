@@ -7,6 +7,7 @@ import numpy as np
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
+from components.sinkformers import SinkhornDistanceFast
 
 
 class FeedForwardNetwork(nn.Module):
@@ -130,6 +131,93 @@ class ScaledProductAttentionSoftmax(nn.Module):
         outputs = self.map_to_output(outputs)
 
         # Return the outputs and attention_weights
+        return outputs, attention_weights
+
+
+class ScaledProductAttentionSinkhorn(nn.Module):
+    def __init__(self, d_model, n_heads, d_head, p_dropout, max_iter=3, eps=1):
+        """
+        Initialize the scaled product attention sinkhorn normalization block
+        :param d_model: the number of features of the input
+        :param n_heads: the number of heads
+        :param d_head: the dimension of each heads
+        :param p_dropout: the dropout rate
+        :param max_iter: Sinkhorn iteration
+        :param eps: parameter of Sinkhorn distance
+        """
+        super(ScaledProductAttentionSinkhorn, self).__init__()
+
+        # Cache the variables
+        self.d_model = d_model
+        self.n_head = n_heads
+        self.d_head = d_head
+        self.p_dropout = p_dropout
+        self.max_iter = max_iter
+        self.eps = eps
+
+        # Calculate the inner dimension of multi-headed attention
+        self.inner_dim = self.n_head * self.d_head
+
+        # If number of head is one and d_model == d_head => We don't project the final output
+        self.project_output = False if (self.n_head == 1 and self.d_model == self.d_head) else True
+
+        # Create the Sinkhorn Distance block
+        self.sinkhorn = SinkhornDistanceFast(max_iter=self.max_iter, eps=self.eps)
+
+        # Mapping the input to (query, key, value)
+        # no bias
+        self.map_to_qkv = nn.Linear(in_features=self.d_model, out_features=self.inner_dim * 3, bias=False)
+
+        # Output projection if any
+        # else it is just an identity layer
+        self.map_to_output = nn.Sequential(
+            nn.Linear(self.inner_dim, self.d_model),
+            nn.Dropout(p=self.p_dropout)
+        ) if self.project_output else nn.Identity()
+
+    def forward(self, inputs):
+        """
+        Perform the forward operation of scaled product sinkhorn normalization
+        :param inputs: tensor of shape (batch_size, number_of_batches, d_model)
+        :return: outputs: tensor of shape (batch_size, number_of_batches, d_model)
+        """
+        # Mapping to keys, queries and values
+        # queries_keys_values is a list of tensor of size (batch_size, number_of_batches, d_model)
+        # or (batch_size, number_of_batches, n_head * d_head)
+        queries_keys_values = self.map_to_qkv(inputs).chunk(3, dim=-1)
+
+        # Split queries, keys and values
+        # b is batch_size, n is number_of_patches, h is number of heads, d is the dimension of each head
+        # Each of q, k, v has shape (batch_size, n_heads, number_of_patches, d_head)
+        q, k, v = map(lambda item: rearrange(item, 'b n (h d) -> b h n d', h=self.n_head), queries_keys_values)
+
+        # Calculate the attention scores and weights
+        # attention_scores has shape (batch_size, n_heads, number_of_patches, number_of_patches)
+        attention_scores = torch.matmul(q, k.transpose(-1, -2)) / np.sqrt(self.d_head)
+
+        # Reshape attention score
+        # attention_score has shape (batch_size x number_of_heads, number_of_patches, number_of_patches)
+        attention_score_shape = attention_scores.shape
+        attention_scores = attention_scores.view(-1, attention_score_shape[2], attention_score_shape[3])
+
+        # Perform Sinkhorn iteration to calculate attention weights
+        attention_weights = self.sinkhorn(attention_scores)
+        attention_weights = attention_weights * attention_weights.shape[-1]
+        attention_weights = attention_weights.view(attention_score_shape)
+
+        # Calculate the output
+        # output has size (batch_size, number_of_heads, number_of_patches, dim_head)
+        outputs = torch.matmul(attention_weights, v)
+
+        # Reshape outputs
+        # outputs has size (batch_size, number_of_batches, (number_of_head x dim_head)
+        outputs = rearrange(outputs, 'b h n d -> b n (h d)')
+
+        # Map to output
+        # outputs has size (batch_size, number_of_batches, d_model)
+        outputs = self.map_to_output(outputs)
+
+        # Return outputs and attention weights
         return outputs, attention_weights
 
 
@@ -301,6 +389,20 @@ class VisualTransformerClassification(nn.Module):
                 p_dropout=p_dropout,
                 attention_func=ScaledProductAttentionSoftmax,
                 attention_params={}
+            )
+        elif attention_class == "sinkhorn":
+            self.transformer_encoder = TransformerEncoder(
+                d_model=d_model,
+                n_layers=n_layers,
+                n_heads=n_heads,
+                d_head=d_head,
+                d_ff=d_ff,
+                p_dropout=p_dropout,
+                attention_func=ScaledProductAttentionSinkhorn,
+                attention_params={
+                    "max_iter": 3,
+                    "eps": 1
+                }
             )
 
         # Map-to-output layers

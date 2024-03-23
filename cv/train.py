@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
 
     # Softmax or sinkhorn
-    parser.add_argument("--mode", default="softmax", help="use softmax or sinkhorn normalization")
+    parser.add_argument("--mode", default="sinkhorn", help="use softmax or sinkhorn normalization")
     parser.add_argument("--n_iter", default=1, type=int, help="the number sinkhorn iteration")
 
     # Train parameters
