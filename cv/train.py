@@ -93,7 +93,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Output model prefix
-    parser.add_argument('--output_model_prefix', default='model.pth', type=str, help='output model name prefix')
+    parser.add_argument('--output_model_prefix', default='cv_sinkhorn_model.pth', type=str, help='output model name prefix')
 
     # Image width and height
     parser.add_argument('--image_width', default=224, type=int, help='image width')
